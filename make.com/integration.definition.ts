@@ -7,6 +7,7 @@ export default new IntegrationDefinition({
   name: INTEGRATION_NAME,
   version: '0.2.0', 
   icon: 'icon.svg', 
+  readme: 'hub.md',
   configuration: {
     schema: z.object({
       webhookUrl: z.string().url().describe('Make.com webhook URL'),
@@ -21,11 +22,13 @@ export default new IntegrationDefinition({
     sendData: {
       input: {
         schema: z.object({
-          data: z.string().describe("JSON string of data to send")
+          data: z.string().min(1, { message: "Must not me empty"}).describe("JSON string of data to send")
         }).describe('Input schema for sending data'),
       },
       output: {
-        schema: z.object({ response: z.string() }).describe('Output schema after sending data'),
+        schema: z.object({
+          response: z.array(z.any()).describe('Output schema after sending data, expecting any JSON structure')
+        }).describe('Output schema after sending data'),
       }
     }
   },
