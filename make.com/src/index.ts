@@ -12,7 +12,7 @@ export default new botpress.Integration({
   unregister: async () => {},
   actions: {
     sendData: async function ({ ctx, input, logger }): Promise<botpress.actions.sendData.output.Output> {
-      logger.forBot().info('Sending data to Make.com Test');
+      logger.forBot().info('Sending data to Make.com');
   
       const webhookURL = ctx.configuration.webhookUrl;
       let dataToSend;
@@ -24,24 +24,33 @@ export default new botpress.Integration({
         } else {
           logger.forBot().error(`Invalid JSON format and the error could not be identified`);
         }
-        return { response: 'Invalid data format' };
+        return { response: [{ response: 'Invalid data format' }] };
       }
-      
   
       const nestedData = { data: dataToSend };
-  
+      const start = Date.now();
+
       try {
         const response = await axios.post(webhookURL, nestedData);
-        logger.forBot().info(`Status code: ${response.status}`);
-        return { response: response.data };
+        const duration = Date.now() - start;
+        logger.forBot().info(`Successfully sent data to Make.com, duration: ${duration}ms, status code: ${response.status}`);
+        return { response: [{ response: response.data }] };
       } catch (error) {
+        const duration = Date.now() - start;
         if (axios.isAxiosError(error)) {
           const status = error.response ? error.response.status : 'Network Error';
-          logger.forBot().error(`Error sending data to Make.com: ${status}`);
-          return { response: `Error: ${status}` };
+          logger.forBot().error({
+            message: `Error sending data to Make.com. Status: ${status}, duration: ${duration}ms`,
+            error: error.message,
+            status: error.response ? error.response.status : 'Network Error',
+            duration: Date.now() - start,
+            requestData: nestedData,
+            response: error.response?.data,
+          });
+          return { response: [{ response: `Error sending data to Make.com, Status: ${status}, Error: ${error.message}, Duration: ${Date.now() - start}ms. Check you webhook url` }] };
         } else {
           logger.forBot().error(`An unknown error occurred while sending data to Make.com`);
-          return { response: 'An unknown error occurred' };
+          return { response: [{ response: `An unknown error occurred while sending data to Make.com, Duration: ${Date.now() - start}ms` }] };
         }
       }
     }    
