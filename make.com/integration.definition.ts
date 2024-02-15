@@ -13,11 +13,7 @@ export default new IntegrationDefinition({
       webhookUrl: z.string().url().describe('Make.com webhook URL'),
     }).describe('Configuration schema for Make.com Integration'),
   },
-  channels: {
-    channel: {
-      messages: { ...messages.defaults },
-    },
-  },
+channels: {},
   actions: {
     sendData: {
       input: {
